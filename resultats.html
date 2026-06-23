@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Résultats de recherche</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="js/fuse.min.js"></script>
+
+  <style>
+    /* === STYLE DE LA PAGE DE RÉSULTATS === */
+
+    body {
+      background-color: var(--gris-fond);
+      color: var(--gris-texte);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 35px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--bleu-dgac);
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    #query-text {
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 25px;
+      color: #555;
+    }
+
+    #results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .result-card {
+      background: var(--gris-clair);
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      padding: 20px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .result-card:hover {
+      background: #dceaf9;
+      transform: translateY(-3px);
+    }
+
+    .result-card h3 {
+      color: var(--bleu-amp);
+      font-size: 1.3em;
+      margin-bottom: 10px;
+    }
+
+    .result-card p {
+      font-size: 0.95em;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .category {
+      display: inline-block;
+      background: var(--bleu-dgac);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: background 0.3s ease;
+    }
+
+    .category:hover {
+      background: var(--bleu-amp);
+    }
+
+    button {
+      display: block;
+      margin: 40px auto 20px;
+      background: var(--bleu-dgac);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--bleu-amp);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    </style>
+
+</head>
+<body>
+  <body>
+  <main>
+    <h1>Résultats de votre recherche</h1>
+    <p id="query-text"></p>
+    <div id="results-container"></div>
+    <button onclick="window.location.href='index.html'">⬅️ Retour à l’accueil</button>
+  </main>
+
+  <footer>
+    DGAC / Aéroport Marseille Provence — Outil d’aide à l’évaluation
+  </footer>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // === Liste des items (tu peux la mutualiser plus tard dans un fichier JS séparé)
+     const items = [
+      { name: "Rigueur", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/01-rigueur-sol.html",
+        loc: "items/01-rigueur-loc.html",
+        app: "items/01-rigueur-app.html",
+        cordon : "items/01-rigueur cordon.html"
+      }, keywords : [
+    "rigueur", "rigoureux", "rigoriste", "discipline", "discipliné", "concentration", "concentré",
+  "attention", "attentif", "exactitude", "exacts", "précision", "précis", "précise", "soin", "soigneux",
+  "méthode", "méthodique", "structuré", "organisé", "ordonné", "sérieux", "appliqué", "méticuleux",
+  "phraséologie", "phraséo", "phraséo correcte", "phraséo en vigueur", "bonne phraseo", "mauvaise phraseo",
+  "radio phraseo", "phraseo conforme", "phraseo standard", "strip", "strips", "stripping", "bon stripping", "mauvais stripping",
+  "strip correct", "strip complet", "strip clair", "strip propre",
+  "tableau", "actualisation tableau", "mise à jour tableau", "tour de tableau", "tableau tenu", "tableau à jour",
+  "coordination", "coordination correcte", "coordination incomplète", "coordination claire",
+  "environnement", "veille", "veille active", "écoute", "surveillance", "contrôle", "contrôler", "vérification", "vérifier", "suivi",
+  "suivi de situation", "monitoring", "checking", "check", "contrôle qualité", "vigilance",
+  "rigorisme", "trop strict", "rigidité", "inflexible", "absence de souplesse", "trop sévère",
+  "absent", "manquant", "non respect", "non conforme", "non conformité", "non-respect", "non-conformité",
+  "approximatif", "approximative", "approche approximative", "retard", "en retard", "retardataire", 
+  "erreur", "erreurs", "fautes", "mauvaises données", "oubli", "oublis", "illisible", "écriture illisible",
+  "défaut", "défauts", "défaut de mise à jour", "défaut de strip", "délivre sans préparation",
+  "préparation insuffisante", "pas préparé", "se disperse", "dispersé", "désorganisé", "incomplet",
+  "incomplète", "manquant", "inachevé", "partiel",
+  "rigor", "rigour", "precis", "precision", "exact", "exactement", "accuracy", "accurate", "attentionné",
+  "careful", "diligent", "vigilant", "soigneux", "propre", "propreté", "verbaliser", "communication claire",
+  "communication radio", "radio claire", "communication conforme",
+  "mettre à jour", "mise à jour", "actualiser", "actualisation", "vérifier", "contrôler", "surveiller",
+  "tenir à jour", "tenir le tableau", "tenir les strips",
+  "gestion du tableau", "mise à jour plan de vol", "données plan de vol", "plan de vol",
+  "relève incomplète", "mauvaise relève", "relève correcte", "lever de doute", "absence de lever de doute",
+  "vérification d’exécution", "exécution des clairances", "clairance incomplète", "clairance non respectée",
+  "critères d’environnement", "prise en compte environnement", "négligence", "manque de rigueur",
+  "désordre", "travail bâclé", "bâclé", "imprécis", "imprécision", "phraséo incomplète", "phraséo non conforme",
+  "cohérence", "incohérence", "erreur de strip", "erreur de tableau", "oubli de coordination",
+  "oubli de clairance", "pas vérifié", "non vérifié", "pas mis à jour", "non mis à jour", "non actualisé",
+  "relève absente", "strip vide", "strip mal tenu", "strip absent", "strip oublié", "strip erroné",
+  "communication incomplète", "communication partielle", "communication incorrecte", "briefing incomplet",
+  "manque de méthode", "désorganisation", "négligent", "manque d’attention", "inattention",
+  "mauvais suivi", "absence de suivi", "travail non terminé", "inachevé", "travail approximatif",
+  "problème de phraséo", "problème de strip", "problème de tableau", "intégration partielle"
+  ] },
+      { name: "Analyse", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/02-analyse-sol.html",
+        loc: "items/02-analyse-loc.html",
+        app: "items/02-analyse-app.html",
+        cordon : "items/02-analyse cordon.html"
+      }, keywords: [
+      "analyse", "analytique", "analyste", "analyse de situation", "analyse du trafic", "analyse correcte",
+  "réflexion", "raisonnement", "logique", "évaluation", "étude", "jugement", "décision", "compréhension",
+  "conditions de sortie", "sortie", "sorties", "prévisions", "anticipation", "anticiper", "prévoir", "préparation", "planification", "planifier",
+  "à temps", "ponctuel", "anticipé", "en avance", "proactif", "réactif", "préparé",
+  "lenteur acceptable", "rythme adapté", "bonne cadence", "réflexion maîtrisée", "temps de réflexion",
+  "propose", "suggère", "recommande", "indique", "proposition", "solution", "idée", "alternative",
+  "détecte", "détection", "repère", "identifie", "repérage", "aperçoit", "observe", "analyse les conflits",
+  "conflit", "conflits", "conflit aérien", "problème de séparation", "perte de séparation", "résolution", "résoudre", "gestion", "traitement", "traiter",
+  "caractéristiques des vols", "type d’avion", "type d’aéronef", "modèle d’aéronef", "trafic", "volume de trafic", "trafic dense", "flux aérien",
+  "verbaliser", "expliquer", "formuler", "exprimer", "communiquer", "décrire", "commenter", "argumenter",
+  "attentif", "attentionné", "vigilance", "vigilant", "observation", "observateur", "concentration", "concentré", "suivi", "monitoring",
+  "se focalise", "fixation", "obsession", "tunnel", "tunnelisation", "concentration excessive", "vue étroite", "vision limitée", "focus excessif",
+  "lenteur excessive", "retard", "trop lent", "tardif", "manque de réactivité", "réagit lentement", "réponse lente",
+  "clairances conflictuelles", "instructions incohérentes", "erreurs de clairance", "erreurs de clearance", "clearance conflictuelle",
+  "erreurs détection conflit", "conflit non détecté", "détection tardive", "mauvaise détection", "absence de détection",
+  "répond au détriment du reste", "priorisation mauvaise", "réponse inadaptée", "répond au plus bruyant", "perte de vision globale",
+  "oublie autre trafic", "négligence", "partialité", "biais", "omission", "oubli", "manque de suivi", "manque de globalité",
+  "règle sans tenir compte", "isolation", "non prise en compte", "ne considère pas", "ignore", "néglige", "indifférent au contexte",
+  "ne sait pas expliquer", "incompréhension", "incapacité à verbaliser", "ne peut pas expliquer", "manque de clarté", "explications floues",
+  "ne prend jamais en compte", "rarement en compte", "ignore les destinations", "néglige les routes", "oublie les secteurs suivants",
+  "incompatibilités destination", "erreur de routage", "mauvaise coordination", "mauvaise répartition", "conflit de secteur", "erreur de secteur",
+  "conditions de sortie jamais établies", "absence de plan", "pas de plan", "plan oublié", "planification absente",
+  "état d’occupation des pistes", "occupation piste", "méconnaissance du trafic", "ne connaît pas le trafic", "suivi insuffisant",
+  "ne regarde pas dehors", "absence de visualisation", "pas de vision extérieure", "vue réduite", "vision limitée",
+  "manque de vigilance", "manque d’observation", "ne regarde pas", "regarde ailleurs",
+  "diffère intégrations VFR", "retard VFR", "intégration tardive", "retard dans intégration", "délai", "retard non justifié",
+  "analyse lente", "analyse tardive", "analyse superficielle", "analyse incomplète", "analyse absente", "analyse erronée", "analyse correcte",
+  "bonne analyse", "analyse pertinente", "analyse claire", "analyse globale", "analyse fine", "analyse rapide",
+  "erreur d’analyse", "mauvaise analyse", "mauvaise interprétation", "mauvaise évaluation", "interprétation erronée",
+  "logique de résolution", "raisonnement clair", "justification", "argumentation", "explication cohérente",
+  "problème de sortie", "sortie non anticipée", "sortie oubliée", "mauvaise condition de sortie",
+  "anticipation manquante", "prévision erronée", "prévision absente", "prévision tardive",
+  "analyse radar", "analyse plan de vol", "analyse coordination", "analyse trafic", "analyse météo",
+  "focus excessif", "manque d’élargissement", "vue partielle", "manque de prise de recul",
+  "visualisation extérieure", "manque de visualisation", "vision globale", "aperçu global",
+  "observation aérienne", "analyse mentale", "schéma mental", "carte mentale",
+  "situation awareness", "conscience de la situation", "situational awareness",
+  "réflexion opérationnelle", "analyse stratégique", "analyse tactique", "évaluation rapide",
+  "decision making", "décision opérationnelle", "prise de décision", "mauvaise décision", "décision tardive",
+  "processus mental", "analyse cognitive", "analyse comportementale", "erreur de jugement",
+  "ne tient pas compte du trafic", "manque de compréhension du trafic", "erreur d’appréciation", "occupation de piste"
+    ] },
+      { name: "Décision", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/03-decision-sol.html",
+        loc: "items/03-decision-loc.html",
+        app: "items/03-decision-app.html",
+        cordon : "items/03-decision cordon.html"
+      }, keywords: [
+      "décision", "décider", "prise de décision", "prise de choix", "choisir", "choix", "prise d’initiative",
+  "décision autonome", "autonomie", "initiative", "proactivité", "réactivité", "action", "agir", "prend l’initiative",
+  "agit seul", "action sans avis", "sans instruction", "sans accord", "sans validation", "autonome",
+  "clairances sûres", "clairance sûre", "clairances adaptées", "clairance adaptée", "clairance appropriée", "clairance correcte",
+  "autorisation sûre", "autorisation adaptée", "décision sûre", "bonne décision", "décision appropriée",
+  "prématuré", "trop tôt", "anticipé", "hâtif", "tardif", "trop tard", "délai", "décision tardive",
+  "inadapté", "injustifié", "mauvaise décision", "décision erronée", "décision inappropriée", "mauvais choix",
+  "demande accord", "demande autorisation", "attente autorisation", "aval préalable", "aval instructeur",
+  "recherche validation", "besoin d’accord", "demande systématique", "dépendant instructeur", "pas autonome",
+  "durée excessive", "délai entre décision et action", "blanc", "temps mort", "hésitation", "réponse tardive", "latence",
+  "pas de décision", "absence de décision", "aucune décision", "inaction", "paralysie", "bloqué", "attente", "manque de réaction",
+  "indécis", "indécision", "ne décide pas", "retard de décision", "retard à agir", "pas d’action",
+  "résolution de conflit", "résolution conflits", "résout les conflits", "résout", "gère conflit", "traitement conflit", "gestion de conflit",
+  "conflits non résolus", "conflit non résolu", "traitement conflit insuffisant", "résolution insuffisante", "inactivité face au conflit",
+  "peu d’initiatives", "pas d’initiative", "manque d’initiative", "inactivité", "attentisme", "attente passive",
+  "prend des initiatives", "décide rapidement", "agit vite", "décision rapide", "décision réfléchie", "décision maîtrisée",
+  "bonne prise de décision", "prise d’initiative adaptée", "initiative pertinente", "réactivité correcte",
+  "décision cohérente", "décision logique", "décision rationnelle", "choix raisonné", "choix réfléchi",
+  "analyse avant décision", "analyse et action", "décision basée sur analyse",
+  "décision trop lente", "réaction tardive", "réponse tardive", "manque de dynamisme",
+  "trop prudent", "hésitant", "hésite à agir", "hésite avant d’agir", "retarde son action",
+  "erreur de décision", "erreur de jugement", "mauvais jugement", "mauvaise évaluation",
+  "décision mal justifiée", "décision arbitraire", "décision sans fondement",
+  "initiative inadaptée", "initiative mal placée", "initiative inutile",
+  "prend décision seul", "agit de lui-même", "agit spontanément", "décide spontanément",
+  "demande systématiquement l’avis", "recherche validation constante", "dépend de l’instructeur",
+  "manque d’autonomie", "aucune autonomie", "pas d’autonomie", "attente d’ordre", "exécution passive",
+  "décision efficace", "efficacité décisionnelle", "rapidité décisionnelle", "esprit de décision",
+  "décision tardive mais sûre", "décision anticipée", "décision pertinente", "décision maladroite",
+  "réagit bien", "réagit vite", "réagit sans attendre", "réagit lentement",
+  "capacité décisionnelle", "aptitude à décider", "capacité à agir",
+  "prise de responsabilité", "assume sa décision", "assume ses choix",
+  "prise d’initiative constructive", "initiative utile", "décision utile",
+  "ne résout pas les conflits", "ne prend pas position", "évite de décider",
+  "decision making", "ne s'impose pas assez"
+    ] },
+      { name: "Anticipation", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/04-anticipation-sol.html",
+        loc: "items/04-anticipation-loc.html",
+        app: "items/04-anticipation-app.html",
+        cordon : "items/04-anticipation cordon.html"
+      }, keywords: [
+      "anticipation", "anticiper", "prévoir", "prévision", "prévisions", "projection", "planification", "préparation", "préparer",
+  "anticipation du trafic", "prévoir conflit", "anticiper conflit", "gestion conflit", "résolution conflit", "détection précoce", "prévention conflit",
+  "gestion du trafic", "gestion flux", "gestion priorités", "priorités", "ordre de traitement", "organisation", "plan d’action",
+  "marge de disponibilité", "disponibilité", "réserve", "marge", "espace libre", "temps disponible", "disponible", "capacité d’anticipation",
+  "réactivité", "proactivité", "initiative", "dynamisme", "prévoir les besoins", "préparer les actions", "penser à l’avance",
+  "préparation du poste", "préparation du trafic", "préparation des strips", "anticipation des conflits", "prévision météo",
+  "prévision trafic", "prévision de flux", "anticipation coordination", "anticipation inter-secteurs", "coordination secteur", "communication secteur",
+  "coordination anticipée", "demande secteur adjacent", "demande au secteur donnant", "demande au secteur recevant", "transfert anticipé",
+  "préparer coordination", "échange inter-secteurs", "collaboration anticipée", "liaison anticipée",
+  "configuration aéronef", "type d’avion", "plan de vol", "données plan de vol", "FPL", "aéronef attendu", "séquence d’arrivée", "sortie de zone",
+  "anticipation météo", "météo ignorée", "conditions météo", "changement configuration ignoré", "changement de configuration",
+  "prévoir changement", "adapter configuration", "adapter stratégie", "adapter plan", "préparer plan B",
+  "dégroupement prématuré", "dégroupement trop tôt", "dégroupement anticipé", "dégroupement tardif", "erreur de timing", "timing inadapté",
+  "dégroupement systématique", "dégroupement mal anticipé", "dégroupement non adapté", "mauvais timing",
+  "n’anticipe jamais", "absence d’anticipation", "aucune anticipation", "prévision insuffisante", "ne prévoit pas", "ne prépare pas",
+  "attente", "réagit tard", "réactivité insuffisante", "retard réaction", "manque d’anticipation", "manque de préparation", "manque de planification",
+  "subit le trafic", "dépend du trafic", "passif", "bloqué", "saturé", "débordé", "réagit au lieu d’anticiper",
+  "ne prend pas en compte les éléments extérieurs", "ignore la météo", "ignore changement", "néglige éléments extérieurs",
+  "ne tient pas compte du secteur recevant", "ignore secteur recevant", "ne formule aucune demande", "oubli demande", "manque de coordination", "manque d’échange",
+  "n’actualise jamais tableau strips", "tableau non mis à jour", "tableau obsolète", "strip non mis à jour", "strips non actualisés",
+  "tableau mal tenu", "tableau de bord obsolète", "suivi du tableau absent",
+  "ne répond plus aux sollicitations", "manque de réactivité", "retard réponse", "absence de réponse", "ne répond pas", "ignorer appels",
+  "anticipation insuffisante", "planification absente", "absence de vision", "vision à court terme", "aucune projection", "préparation absente",
+  "préparer le trafic", "anticiper le flux", "prévoir les situations", "adapter la gestion", "prévoir les conséquences",
+  "prévoir les sorties", "prévoir les entrées", "prévoir les coordinations", "préparer les transitions",
+  "sait gérer les priorités", "gère bien le trafic", "planifie efficacement", "prévoit correctement", "planification efficace",
+  "gestion efficace", "anticipation correcte", "réactivité adaptée", "bonne marge de disponibilité",
+  "anticipation météo correcte", "préparation adaptée", "bonne organisation", "organisation fluide",
+  "manque de planification", "désorganisation", "préparation insuffisante", "mauvaise anticipation",
+  "mauvais timing", "décalage dans la gestion", "retard dans la préparation", "réactivité tardive",
+  "anticipation proactive", "préparation stratégique", "gestion préventive", "anticipation opérationnelle",
+  "anticiper pour agir", "prévoir pour réagir", "agir avant", "préparer avant", "anticiper les besoins",
+  "manque d’initiative", "attentisme", "réaction uniquement", "réactivité uniquement", "travail en réaction",
+  "anticipation des coordinations", "préparation des transferts", "préparer les transferts", "anticiper les transferts",
+  "ne planifie pas", "absence de plan", "plan inexistant", "pas de vision d’ensemble",
+  "anticipation du secteur", "prévision des flux", "gestion du trafic anticipée",
+  "anticipation du travail", "préparation des actions", "prévision stratégique"
+    ] },
+      { name: "Réaction", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/05-reaction-sol.html",
+        loc: "items/05-reaction-loc.html",
+        app: "items/05-reaction-app.html",
+        cordon : "items/05-reaction cordon.html"
+      }, keywords: [
+      "réaction", "réagir", "réagit", "réactivité", "réactif", "réactiver", "rapidité", "vivacité", "réponse rapide", 
+  "temps de réponse", "adaptation", "ajustement", "réajustement", "adaptabilité", "adapté", "ajuster", 
+  "modification du comportement", "corriger", "correction", "réaction corrective", "réponse adaptée",
+  "repère tâches prioritaires", "priorités", "gestion priorités", "ordre de traitement", "plan d’action", "classement des tâches",
+  "hiérarchisation", "identification priorités", "choix prioritaire", "gérer priorités", "traitement prioritaire",
+  "situation imprévisible", "situation inattendue", "trafic inattendu", "trafic imprévisible", "météo imprévisible", 
+  "événement imprévu", "incident", "situation inhabituelle", "situation rare", "changement soudain", "imprévu", "surprise opérationnelle",
+  "mauvais collationnements", "erreur collationnement", "erreurs de fréquence", "mauvais message", "problème de communication", 
+  "téléphone", "communication téléphonique", "radio", "fréquence", "écoute", "message erroné", "corriger collationnement",
+  "réaction inappropriée", "mauvaise réaction", "réaction tardive", "réaction excessive", "réaction lente", "réaction impulsive", 
+  "réponse non adaptée", "réaction disproportionnée", "mauvais réflexe", "mauvais ajustement", "réponse inadaptée",
+  "franchissement normes", "normes franchies", "non respect norme", "non respect des règles", "franchissement involontaire", 
+  "non-conformité", "écart norme", "erreur opérationnelle", "violation règle", "manquement sécurité",
+  "déstabilisé", "désorienté", "perte repères", "désorganisation", "désordre", "trouble", "perturbé", "stressé", "sous pression",
+  "confusion", "déséquilibre", "incertitude", "perte de contrôle", "manque de maîtrise", "désynchronisation",
+  "remettre en cause tableau", "réévaluer tableau", "réévaluer situation", "réactualiser tableau", "corriger tableau", 
+  "gestion tableau", "gestion strips", "tableau de strips", "erreur tableau", "tableau mal géré", "tableau non tenu à jour",
+  "intégration nouveaux strips lente", "retard strips", "délai strips", "temps d’intégration long", "réaction lente strips",
+  "ajout strips tardif", "mise à jour strips lente", "strips ajoutés tardivement", "intégration retardée",
+  "durée excessive entre décision et action", "latence décision", "temps de réaction long", "réponse tardive", "délai d’action", 
+  "inertie", "lenteur décisionnelle", "temps mort", "manque de réactivité", "retard d’action", "réagit lentement",
+  "aucune réaction corrective", "pas de correction", "absence correction", "absence réaction", "aucune réponse", "immobilisme", 
+  "inaction", "ne réagit pas", "pas de changement", "pas d’ajustement", "pas de modification", "aucune adaptation",
+  "modifier raisonnement", "changer raisonnement", "réviser jugement", "réadapter analyse", "ajuster raisonnement", 
+  "corriger raisonnement", "réviser décision", "adapter comportement", "remarques instructeur", "prise en compte feedback", 
+  "écoute instructeur", "corrige après remarque", "s’adapte aux remarques",
+  "visualisation aéronefs", "voir aéronefs", "perception aéronefs", "perception circuit", "visualiser trafic", 
+  "orientation aéronefs", "visualisation spatiale", "conscience de la situation", "situational awareness", 
+  "suivi visuel", "perte de vue", "visualise mal", "ne voit pas les aéronefs", "perte de perception",
+  "bonne réaction", "réponse appropriée", "réactivité adaptée", "réponse ajustée", "adaptation pertinente", "réagit bien",
+  "gestion efficace imprévu", "bonne adaptation", "réflexe correct", "capacité d’ajustement",
+  "réaction opérationnelle", "réaction comportementale", "réactivité cognitive", "réflexe opérationnel", "temps de traitement", 
+  "gestion événement", "traitement imprévu", "adaptation situationnelle", "ajustement tactique",
+  "manque de réactivité", "absence d’adaptation", "réaction inadaptée", "retard d’analyse", "désorganisation réactionnelle",
+  "pas d’anticipation dans la réaction", "réponse incomplète", "réponse inappropriée", "inertie comportementale",
+  "réactivité immédiate", "réaction rapide", "réflexe immédiat", "ajustement instantané", "réponse fluide", "souplesse",
+  "gestion rapide imprévu", "capacité d’improvisation", "improvisation maîtrisée", "réactivité situationnelle"
+    ] },
+      { name: "Coopération", categories: ["sol", "loc", "app","cordon"],  links: {
+        sol: "items/06-cooperation-sol.html",
+        loc: "items/06-cooperation-loc.html",
+        app: "items/06-cooperation-app.html",
+        cordon : "items/06-cooperation cordon.html"
+      }, keywords: [
+      "coopération", "collaboration", "travail équipe", "travail collectif", "collaboratif", "coordination", "synergie", "entente", "partage", "travail commun", "coopérer", "attentif aux autres", "écoute", "prise en compte collègues", "prise en compte des autres", "respect collègues", "consideration", "soutien", "aide", "aide aux autres", "solidaire", "empathie", "compréhension", "recherche informations", "informations nécessaires", "transmission relève", "préparation relève", "informations transmises", "infos pertinentes", "transmission claire", "partage infos", "collecte informations", "solutions respect contraintes", "prise en compte contraintes", "propose solutions", "propositions adaptées", "solution adaptée", "solution acceptable", "respect procédures", "respect règles", "solutions conformes", "secteur formé deux contrôleurs", "entité secteur", "coordination secteur", "travail en binôme", "travail en duo", "interaction secteur", "coopération secteur", "entité contrôleurs", "coordination entre contrôleurs", "empiètement fonctions", "empiéter", "envahissant", "bruyant", "invasif", "imposer tâches", "perturber collègue", "interférer", "intrusif", "déborder fonction", "débordement", "non respect rôle", "interférence", "trop présent", "disponibilité collègues", "prise en compte disponibilité", "respect disponibilité", "adaptation disponibilité", "prendre en compte collègues", "aide selon disponibilité", "planification en fonction des autres", "lisibilité strips", "tenue tableau", "strips illisibles", "tableau illisible", "tableau clair", "tableau lisible", "tenue correcte tableau", "organisation tableau", "gestion strips", "information claire", "lisibilité", "strips mal tenus", "communication demande", "bouclage absent", "absence bouclage", "confirmation message", "bouclage", "clarification message", "feedback", "retour info", "échanges", "partage informations", "communication incomplète", "message non confirmé", "informations utiles non répercutées", "informations inutiles", "non transmission info utile", "oubli info", "multiplier informations inutiles", "surcharge informations", "infos inutiles", "manque de communication utile", "info non relayée", "performance individuelle", "préférence individuelle", "compétition", "individualisme", "priorité personnelle", "centré sur soi", "objectif personnel", "moi d’abord", "ego", "non coopératif", "intérêt individuel", "problème élocution", "débit parole", "bafouillage", "problème communication", "expression difficile", "discours confus", "parole hachée", "communication mal articulée", "communication perturbée", "parole lente", "parole rapide", "attitude polémique", "attitude agressive", "émotivité", "individualiste", "comportement conflictuel", "conflit", "agressif", "colère", "émotions fortes", "irritable", "dispute", "provocateur", "polémique", "tension", "désaccord", "bonne coopération", "écoute active", "travail harmonieux", "soutien mutuel", "partage efficace", "communication efficace", "communication claire", "respect rôle", "coopération positive", "collaboration réussie", "échange fluide", "manque de communication", "pas de communication", "cordon", "assloc", "n'écoute pas autour"
+    ] },
+      { name: "Autorité", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/07-autorite-sol.html",
+        loc: "items/07-autorite-loc.html",
+        app: "items/07-autorite-app.html",
+        cordon : "items/07-autorite cordon.html"
+      }, keywords: [
+      "autorité", "assertivité", "prise de décision", "décider", "initiative", "affirmation", "assumer responsabilité", "leadership", "refuser demande", "dire non", "refus", "savoir dire non", "capacité à refuser", "limites", "poser limite", "dire stop", "refus clair", "dire non clairement", "messages radio clairs", "radio claire", "communication efficace", "ton convaincant", "éloquence", "messages précis", "phrases claires", "clarification", "transmission claire", "ton ferme", "prononciation claire", "parole claire", "ne pas répéter", "pas de répétition nécessaire", "répétition inutile", "pas d'erreur communication", "répétition évitée", "compréhension immédiate", "transmission efficace", "demande confirmation", "demander confirmation", "répétition nécessaire", "confirmation", "vérifier compréhension", "check", "assurer compréhension", "demander validation", "vérifier instructions", "avis instructeur", "toujours demander avis", "recherche avis", "ne sait pas refuser", "n’ose pas demander confirmation", "peur dire non", "inhibition décision", "manque d’assertivité", "manque d’autonomie", "dépendance instructeur", "pas de décision autonome", "hésitation", "indécision", "bonne autorité", "autorité positive", "assertif", "sûr de soi", "capacité décisionnelle", "affirmé", "leadership clair", "prise d’initiative", "confiance décision", "capacité à dire non", "capacité à refuser", "communication assertive", "ne s'impose pas assez"
+    ] },
+      { name: "Maturité", categories: ["sol", "loc", "app","cordon"],  links: {
+        sol: "items/08-maturite-sol.html",
+        loc: "items/08-maturite-loc.html",
+        app: "items/08-maturite-app.html",
+        cordon : "items/08-maturite cordon.html"
+      }, keywords: [
+      "maturité", "responsabilité", "autonomie", "conscience de soi", "self-awareness", "indépendance", "fiabilité", "capacité décisionnelle", "dire ce qu’il n’a pas compris", "demander aide", "refuser demande", "savoir dire non", "poser limite", "capacité à refuser", "assumer responsabilité", "soucieux des autres", "préoccupé des autres", "attention aux autres", "empathie", "considération collègues", "coopération", "travail en équipe", "teamwork", "vérification permanente", "contrôle continu", "suivi constant", "contrôle régulier", "maillon chaîne", "rôle dans chaîne", "responsabilité dans équipe", "conscient rôle", "cautionnement", "recherche validation", "besoin approbation", "demande caution", "dépendance instructeur", "ne pas oser demander confirmation", "n’ose pas dire débordé", "peur dire non", "inhibition décision", "manque d’assertivité", "hésitation", "indécision", "manque de confiance", "n’accepte pas erreurs", "justification erreur", "ne reconnaît pas ses erreurs", "n’accepte aucune remarque", "déstabilisé remarques instructeur", "fragilité face critique", "détection conflit", "analyse conflit", "gestion conflit", "identification problèmes", "anticipation problème", "résolution problèmes", "problem solving", "gestion stress", "stress management", "contrôle stress", "découragement", "perte motivation", "résilience faible", "décalage situation réelle", "erreur d’appréciation", "écart prévu/réel", "mauvaise évaluation situation", "résolution faux problèmes", "perte temps sur problème inutile", "résolution inutile", "remise de gaz", "procédure remise de gaz", "réaction sécurité", "utilisation remise gaz", "irrespectueux", "irrespect", "insolent", "arrogant", "conteste les débriefings"
+    ] },
+      { name: "Efficacité", categories: ["sol", "loc", "app","cordon"], links: {
+        sol: "items/09-efficacite-sol.html",
+        loc: "items/09-efficacite-loc.html",
+        app: "items/09-efficacite-app.html",
+        cordon : "items/09-efficacite cordon.html"
+      }, keywords: [
+      "efficacité", "aller à l’essentiel", "essentiel", "solution simple", "simplicité", "réduction complexité", 
+  "actualisation temps réel", "mise à jour rapide", "temps réel", "information à jour",
+  "gestion situation", "gestion flux", "gestion priorités", "organisation tâche", "ordre traitement", "prise de décision rapide",
+  "messages opportuns", "messages clairs", "messages précis", "information concise", "communication efficace", "information bien formulée", "information essentielle",
+  "information trafic", "infos trafic", "trafic aérien", "données vol",
+  "pas de complexité inutile", "évite complexité", "ne complexifie pas", "simplicité communication",
+  "hésitation minimale", "sans hésitation", "réponse immédiate", "rapidité réaction",
+  "tâche prioritaire", "priorité", "distinguer tâche prioritaire", "décider tâche importante",
+  "répétition message", "répéter inutilement", "messages répétitifs", "clarification message", 
+  "décision rapide", "décision immédiate", "prise décision efficace",
+  "sécurité", "sûr", "information sûre", "préserve sécurité", "risque minimal",
+  "superflu", "information inutile", "données superflues", "non pertinent",
+  "demande pilote", "répond demande pilote", "demande externe", "instruction pilote"
+    ] }
+    ];
+
+
+    // === Config Fuse ===
+    const fuse = new Fuse(items, {
+      keys: ['keywords'],
+      threshold: 0.4,
+      includeScore: true,
+      minMatchCharLength: 2
+    });
+
+    // === Récupération du paramètre q dans l’URL ===
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('q');
+    const queryText = document.getElementById('query-text');
+    const resultsContainer = document.getElementById('results-container');
+
+    queryText.textContent = `Résultats pour : "${query}"`;
+
+    if (query && query.trim().length > 0) {
+      const results = fuse.search(query);
+      if (results.length === 0) {
+        resultsContainer.innerHTML = `<p>Aucun résultat trouvé 😕</p>`;
+        return;
+      }
+
+      results.forEach(result => {
+        const item = result.item;
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+          <h3>${item.name}</h3>
+          <p>Position du stagiaire :</p>
+          <div>
+           ${item.categories.map(cat => `<a href="${item.links[cat]}" class="category">${cat.toUpperCase()}</a>`).join(' ')}
+          </div>
+         `;
+        resultsContainer.appendChild(card);
+      });
+    } else {
+    resultsContainer.innerHTML = `<p>Aucune recherche n’a été saisie.</p>`;
+    }
+  });
+  </script>
+</body>
+</html>
